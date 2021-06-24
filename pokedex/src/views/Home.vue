@@ -9,6 +9,7 @@
           :title="pokemon.name"
           :image="imgURL + (index + 1) + '.png'"
           :imgAlt="pokemon.name"
+          @click.native="getPokemonData(index + 1, pokemon.name, pokemon.url)"
         />
       </b-row>
     </b-container>
@@ -17,6 +18,7 @@
 
 <script>
 import Card from "../components/Card.vue";
+import axios from "axios";
 
 export default {
   name: "Home",
@@ -24,7 +26,9 @@ export default {
   data() {
     return {
       PokemonList: [],
-      imgURL: "https://pokeres.bastionbot.org/images/pokemon/",
+      Pokedex: [],
+      imgURL:
+        "https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/",
     };
   },
   methods: {
@@ -36,8 +40,6 @@ export default {
       P.getPokemonsList(interval).then((res) => {
         this.PokemonList = res.results;
       });
-
-      //alert(JSON.stringify(response))
     },
     pokemonInterval() {
       let interval = {
@@ -46,6 +48,57 @@ export default {
       };
 
       return interval;
+    },
+    getPokemonData(id, name, url) {
+      axios.get(`${url}`).then((res) => {
+        let pokemon = this.setPokemon(id, name, res);
+        this.setLocalStorage(pokemon);
+      });
+    },
+    setLocalStorage(pokemon) {
+      this.Pokedex = localStorage.getItem("Pokedex");
+
+      if (this.Pokedex) {
+        this.Pokedex = JSON.parse(this.Pokedex);
+        this.Pokedex.push(pokemon);
+        this.Pokedex.sort(this.compareId);
+      } else {
+        this.Pokedex = [pokemon];
+      }
+
+      localStorage.setItem("Pokedex", JSON.stringify(this.Pokedex));
+    },
+    compareId(element1, element2) {
+      if (element1.id > element2.id) {
+        return 1;
+      } else if (element1.id < element2.id) {
+        return -1;
+      }
+    },
+    setPokemon(id, name, res) {
+      let info = {
+        id: id,
+        name: name,
+        image: res.data.sprites.front_default,
+        hp: res.data.stats[0].base_stat,
+        attack: res.data.stats[1].base_stat,
+        defense: res.data.stats[2].base_stat,
+        speed: res.data.stats[5].base_stat,
+        weight: res.data.weight,
+        height: res.data.height,
+        types: [],
+        moves: [],
+      };
+
+      res.data.moves.forEach((element) => {
+        info.moves.push(element.move.name);
+      });
+
+      res.data.types.forEach((element) => {
+        info.types.push(element.type.name);
+      });
+
+      return info;
     },
   },
   mounted() {
