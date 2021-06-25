@@ -26,13 +26,10 @@ export default {
 ::-webkit-scrollbar {
   width: 1rem;
 }
-
-::-webkit-scrollbar-track {
-  box-shadow: inset 0 0 5px grey; 
-}
  
 ::-webkit-scrollbar-thumb {
   background: #a1a1a1; 
+  border-radius: 15px;
 }
 
 ::-webkit-scrollbar-thumb:hover {

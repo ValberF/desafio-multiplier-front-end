@@ -7,7 +7,7 @@
       style="max-width: 12rem"
       class="mb-5 text-center"
     >
-      <b-button href="#" variant="primary">Capturar</b-button>
+      <slot />
     </b-card>
 </template>
 

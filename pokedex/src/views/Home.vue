@@ -9,8 +9,13 @@
           :title="pokemon.name"
           :image="imgURL + (index + 1) + '.png'"
           :imgAlt="pokemon.name"
-          @click.native="getPokemonData(index + 1, pokemon.name, pokemon.url)"
-        />
+        >
+          <b-button
+            @click="getPokemonData(index + 1, pokemon.name, pokemon.url)"
+            variant="primary"
+            >Capturar</b-button
+          >
+        </Card>
       </b-row>
     </b-container>
   </div>
@@ -43,7 +48,7 @@ export default {
     },
     pokemonInterval() {
       let interval = {
-        limit: 151,
+        limit: 500,
         offset: 0,
       };
 
@@ -53,6 +58,7 @@ export default {
       axios.get(`${url}`).then((res) => {
         let pokemon = this.setPokemon(id, name, res);
         this.setLocalStorage(pokemon);
+        alert((pokemon.name + " capturado!").toUpperCase());
       });
     },
     setLocalStorage(pokemon) {
