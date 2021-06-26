@@ -149,7 +149,7 @@ export default {
       localStorage.setItem("Pokedex", JSON.stringify(this.pokedex));
       alert((name + " excluído da pokedex!").toUpperCase());
     },
-    async pokemonTempData(pokemon) {
+    pokemonTempData(pokemon) {
       this.tempData = pokemon;
       this.tempData.name =
         this.tempData.name.charAt(0).toUpperCase() +
