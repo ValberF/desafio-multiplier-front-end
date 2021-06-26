@@ -64,7 +64,7 @@ export default {
           setTimeout(() => {
             this.setLocalStorage(pokemon);
             alert((pokemon.name + " capturado!").toUpperCase());
-          }, 250);
+          }, 100);
         });
     },
     setLocalStorage(pokemon) {
