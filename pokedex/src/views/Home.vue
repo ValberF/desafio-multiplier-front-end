@@ -4,9 +4,9 @@
     <b-container>
       <b-row align-h="around">
         <Card
-          v-for="(pokemon, index) in PokemonList"
+          v-for="(pokemon, index) in pokemonList"
           :key="index"
-          :title="pokemon.name"
+          :title="pokemon.name.charAt(0).toUpperCase() + pokemon.name.slice(1)"
           :image="imgURL + (index + 1) + '.png'"
           :imgAlt="pokemon.name"
         >
@@ -30,8 +30,8 @@ export default {
   components: { Card },
   data() {
     return {
-      PokemonList: [],
-      Pokedex: [],
+      pokemonList: [],
+      pokedex: [],
       imgURL:
         "https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/",
     };
@@ -43,7 +43,7 @@ export default {
       let interval = this.pokemonInterval();
 
       P.getPokemonsList(interval).then((res) => {
-        this.PokemonList = res.results;
+        this.pokemonList = res.results;
       });
     },
     pokemonInterval() {
@@ -55,24 +55,31 @@ export default {
       return interval;
     },
     getPokemonData(id, name, url) {
-      axios.get(`${url}`).then((res) => {
-        let pokemon = this.setPokemon(id, name, res);
-        this.setLocalStorage(pokemon);
-        alert((pokemon.name + " capturado!").toUpperCase());
-      });
+      axios
+        .get(`${url}`)
+        .then((res) => {
+          return this.setPokemon(id, name, res);
+        })
+        .then((pokemon) => {
+          setTimeout(() => {
+            this.setLocalStorage(pokemon);
+            alert((pokemon.name + " capturado!").toUpperCase());
+          }, 250);
+        });
     },
     setLocalStorage(pokemon) {
-      this.Pokedex = localStorage.getItem("Pokedex");
+      this.pokedex = localStorage.getItem("Pokedex");
 
-      if (this.Pokedex) {
-        this.Pokedex = JSON.parse(this.Pokedex);
-        this.Pokedex.push(pokemon);
-        this.Pokedex.sort(this.compareId);
+      if (this.pokedex) {
+        this.pokedex = JSON.parse(this.pokedex);
+        this.pokedex.push(pokemon);
+        this.pokedex.sort(this.compareId);
       } else {
-        this.Pokedex = [pokemon];
+        this.pokedex = [pokemon];
       }
 
-      localStorage.setItem("Pokedex", JSON.stringify(this.Pokedex));
+      console.log(this.pokedex);
+      localStorage.setItem("Pokedex", JSON.stringify(this.pokedex));
     },
     compareId(element1, element2) {
       if (element1.id > element2.id) {
@@ -96,14 +103,25 @@ export default {
         moves: [],
       };
 
-      res.data.moves.forEach((element) => {
-        info.moves.push(element.move.name);
-      });
-
       res.data.types.forEach((element) => {
         info.types.push(element.type.name);
       });
 
+      res.data.moves.forEach(async (element) => {
+        let Pokedex = require("pokedex-promise-v2");
+        let P = new Pokedex();
+        let move = {};
+
+        move.name = element.move.name;
+
+        try {
+          const moveFromApi = await P.getMoveByName(move.name);
+          move.short_effect = moveFromApi.effect_entries[0].short_effect;
+        } catch (err) {
+          console.log(err);
+        }
+        info.moves.push(move);
+      });
       return info;
     },
   },

@@ -35,4 +35,8 @@ export default {
 ::-webkit-scrollbar-thumb:hover {
   background: #717171; 
 }
+
+input {
+  margin-bottom: 25px !important;
+}
 </style>

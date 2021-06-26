@@ -1,14 +1,14 @@
 <template>
-    <b-card
-      :title="title"
-      :img-src="image"
-      :img-alt="imageAlt"
-      img-top
-      style="max-width: 12rem"
-      class="mb-5 text-center"
-    >
-      <slot />
-    </b-card>
+  <b-card
+    :title="title"
+    :img-src="image"
+    :img-alt="imageAlt"
+    img-top
+    style="max-width: 12rem"
+    class="mb-5 text-center"
+  >
+    <slot />
+  </b-card>
 </template>
 
 <script>

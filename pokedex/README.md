@@ -1,5 +1,9 @@
 # pokedex
 
+## Nome
+
+Valber Francisco dos Santos
+
 ## Project setup
 ```
 npm install

@@ -1,10 +1,20 @@
 <template>
   <div class="pokedex">
     <h1>PokéDex</h1>
+
     <b-container>
+      <b-form-input
+        id="input-1"
+        v-model="search"
+        placeholder="Procurar Pokémon"
+      ></b-form-input>
       <b-row align-h="around">
         <ul class="list-unstyled">
-          <b-media tag="li" v-for="(pokemon, index) in Pokedex" :key="index">
+          <b-media
+            tag="li"
+            v-for="(pokemon, index) in filteredList"
+            :key="index"
+          >
             <template #aside>
               <b-img
                 :src="pokemon.image"
@@ -12,9 +22,22 @@
                 :alt="pokemon.name"
               ></b-img>
             </template>
-            <h5 class="mt-0 mb-1">{{ pokemon.name }}</h5>
-            <b-badge :class="pokemon.types[0]">{{ pokemon.types[0] }}</b-badge>
-            <b-badge :class="pokemon.types[1]">{{ pokemon.types[1] }}</b-badge>
+            <h5 class="mt-0 mb-1">
+              #{{ pokemon.id }}
+              {{ pokemon.name.charAt(0).toUpperCase() + pokemon.name.slice(1) }}
+            </h5>
+            <b-badge
+              @click="getPokemons(pokemon.types[0])"
+              v-b-modal.modal-2
+              :class="pokemon.types[0]"
+              >{{ pokemon.types[0] }}</b-badge
+            >
+            <b-badge
+              @click="getPokemons(pokemon.types[1])"
+              v-b-modal.modal-2
+              :class="pokemon.types[1]"
+              >{{ pokemon.types[1] }}</b-badge
+            >
             <b-icon
               icon="x-circle"
               @click="deletePokemon(pokemon.name, index)"
@@ -35,58 +58,135 @@
     </b-container>
     <b-modal id="modal-1" :title="tempData.name">
       <b-img :src="tempData.image" width="150" :alt="tempData.name"></b-img>
+      <h5>
+        <b-badge
+          v-for="(types, index) in tempData.types"
+          :key="index"
+          :class="tempData.types[index]"
+          v-b-modal.modal-2
+          @click="getPokemons(tempData.types[index])"
+          >{{ tempData.types[index] }}</b-badge
+        >
+      </h5>
       <b-container>
         <b-row>
           <strong>Movimentos:</strong>
-          <b-list-group flush title="Movimentos:" style="max-width: 55%">
+          <b-list-group flush title="Movimentos:" style="max-width: 57%">
             <b-list-group-item
               v-for="(moves, index) in tempData.moves"
               :key="index"
-              >{{ tempData.moves[index] }}</b-list-group-item
-            >
+              >{{ tempData.moves[index].name }}
+              <b-button
+                id="tooltip-target-1"
+                v-b-tooltip.hover
+                variant="primary"
+                :title="tempData.moves[index].short_effect"
+              >
+                <b-icon
+                  icon="chevron-compact-up"
+                  scale="1.5"
+                  variant="light"
+                ></b-icon> </b-button
+            ></b-list-group-item>
           </b-list-group>
+          <b-tooltip target="tooltip-target-1" triggers="hover"> </b-tooltip>
 
           <b-container class="pokemon-details" style="max-width: 40%">
-            <p>Peso: {{ (tempData.weight/10) }} kg</p>
-            <p>Altura: {{ (tempData.height/10) }} m</p>
+            <p>Peso: {{ tempData.weight / 10 }} kg</p>
+            <p>Altura: {{ tempData.height / 10 }} m</p>
             <p>Vida: {{ tempData.hp }}</p>
             <p>Ataque: {{ tempData.attack }}</p>
             <p>Defesa: {{ tempData.defense }}</p>
             <p>Velocidade: {{ tempData.speed }}</p>
-
-          </b-container >
+          </b-container>
         </b-row>
       </b-container>
+    </b-modal>
+    <b-modal id="modal-2" title="Pokémons">
+      <b-row align-h="around">
+        <Card
+          v-for="(pokemon, index) in pokemonsByType"
+          :key="index"
+          :title="
+            pokemon.pokemon.name.charAt(0).toUpperCase() +
+            pokemon.pokemon.name.slice(1)
+          "
+          :image="imgURL + pokemon.pokemon.url.split('/')[6] + '.png'"
+          :imgAlt="pokemon.pokemon.name"
+        />
+      </b-row>
     </b-modal>
   </div>
 </template>
 
 <script>
+import axios from "axios";
+import Card from "../components/Card.vue";
+
 export default {
   name: "Pokedex",
+  components: {
+    Card,
+  },
   data() {
     return {
-      Pokedex: [],
+      pokedex: [],
+      pokemonsByType: [],
       tempData: {},
+      search: "",
+      imgURL:
+        "https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/",
     };
   },
   methods: {
     getPokedex() {
-      this.Pokedex = localStorage.getItem("Pokedex");
-      this.Pokedex = JSON.parse(this.Pokedex);
+      this.pokedex = localStorage.getItem("Pokedex");
+
+      this.pokedex = JSON.parse(this.pokedex);
     },
     deletePokemon(name, id) {
-      this.Pokedex.splice(id, 1);
-      localStorage.setItem("Pokedex", JSON.stringify(this.Pokedex));
+      this.pokedex.splice(id, 1);
+      localStorage.setItem("Pokedex", JSON.stringify(this.pokedex));
       alert((name + " excluído da pokedex!").toUpperCase());
     },
-    pokemonTempData(pokemon) {
+    async pokemonTempData(pokemon) {
       this.tempData = pokemon;
-      this.tempData.name = this.tempData.name.toUpperCase();
+      this.tempData.name =
+        this.tempData.name.charAt(0).toUpperCase() +
+        this.tempData.name.slice(1);
+    },
+    getPokemons(type) {
+      let urlType;
+      axios
+        .get("https://pokeapi.co/api/v2/type/")
+        .then((res) => {
+          res.data.results.forEach((element) => {
+            if (element.name == type) {
+              urlType = element.url;
+            }
+          });
+          return urlType;
+        })
+        .then((res) => {
+          axios.get(res).then((res) => {
+            this.pokemonsByType = [];
+            res.data.pokemon.forEach((element) => {
+              this.pokemonsByType.push(element);
+            });
+          });
+        });
     },
   },
   mounted() {
     this.getPokedex();
+  },
+  computed: {
+    filteredList() {
+      return this.pokedex.filter((pokemon) => {
+        let name = pokemon.id + " " + pokemon.name;
+        return name.toLowerCase().includes(this.search.toLowerCase());
+      });
+    },
   },
 };
 </script>
@@ -103,7 +203,7 @@ h1 {
 }
 
 .pokedex .container {
-  padding: 2rem;
+  padding: 1.2rem;
   height: 70vh;
   width: 95vw;
   overflow-y: scroll;
@@ -113,7 +213,7 @@ h1 {
   box-shadow: 0 0 10px rgba(0, 0, 0, 0.25);
 }
 
-.pokedex .badge:nth-child(3) {
+.badge {
   margin-left: 7px;
 }
 
@@ -124,8 +224,12 @@ h1 {
   cursor: pointer;
 }
 
+.modal-body {
+  overflow-y: scroll;
+}
+
 .modal-content {
-  min-height: 72vh !important;
+  height: 83vh !important;
 }
 
 .list-group {
@@ -153,6 +257,21 @@ h1 {
 .pokemon-details p {
   font-size: smaller;
   font-weight: bold;
+}
+
+.list-group-item {
+  display: flex !important;
+  justify-content: space-between;
+}
+
+.list-group-item .btn {
+  display: flex !important;
+  justify-content: center;
+  align-items: center;
+  font-size: smaller !important;
+  font-weight: bold !important;
+  height: 3vh;
+  width: 3vw;
 }
 
 .normal {
@@ -226,5 +345,4 @@ h1 {
 .fairy {
   background-color: #e897ac;
 }
-
 </style>
